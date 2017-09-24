@@ -14,34 +14,6 @@ module ManageIQ::Providers::Azure::CloudManager::Provision::Cloning
     ManageIQ::Providers::Azure::CloudManager::Vm.find_by("lower(ems_ref) = ?", ems_ref.downcase)
   end
 
-  def gather_storage_account_properties
-    sas = nil
-
-    source.with_provider_connection do |azure|
-      sas = Azure::Armrest::StorageAccountService.new(azure)
-    end
-
-    return if sas.nil?
-
-    begin
-      image = sas.list_private_images(storage_account_resource_group).find do |img|
-        img.uri == source.ems_ref
-      end
-
-      return unless image
-
-      platform   = image.operating_system
-      endpoint   = image.storage_account.properties.primary_endpoints.blob
-      source_uri = image.uri
-
-      target_uri = File.join(endpoint, "manageiq", dest_name + "_" + SecureRandom.uuid + ".vhd")
-    rescue Azure::Armrest::ResourceNotFoundException => err
-      _log.error("Error Class=#{err.class.name}, Message=#{err.message}")
-    end
-
-    return target_uri, source_uri, platform
-  end
-
   def custom_data
     userdata_payload.encode('UTF-8').delete("\n")
   end
@@ -112,50 +84,6 @@ module ManageIQ::Providers::Azure::CloudManager::Provision::Cloning
 
   def region
     source.location
-  end
-
-  def storage_account_resource_group
-    source.description.split("\\").first
-  end
-
-  def storage_account_name
-    source.description.split("\\")[1]
-  end
-
-  def associated_nic
-    floating_ip.try(:network_port).try(:ems_ref)
-  end
-
-  def create_nic
-    source.with_provider_connection do |azure|
-      nis             = Azure::Armrest::Network::NetworkInterfaceService.new(azure)
-      ips             = Azure::Armrest::Network::IpAddressService.new(azure)
-      ip              = ips.create("#{dest_name}-publicIp", resource_group.name, :location => region)
-      network_options = build_nic_options(ip.id)
-
-      return nis.create(dest_name, resource_group.name, network_options).id
-    end
-  end
-
-  def build_nic_options(ip)
-    network_options = {
-      :location   => region,
-      :properties => {
-        :ipConfigurations => [
-          :name       => dest_name,
-          :properties => {
-            :subnet          => {
-              :id => cloud_subnet.ems_ref
-            },
-            :publicIPAddress => {
-              :id => ip
-            },
-          }
-        ],
-      }
-    }
-    network_options[:properties][:networkSecurityGroup] = {:id => security_group.ems_ref} if security_group
-    network_options
   end
 
   def start_clone(clone_options)
