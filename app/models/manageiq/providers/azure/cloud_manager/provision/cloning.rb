@@ -58,6 +58,12 @@ module ManageIQ::Providers::Azure::CloudManager::Provision::Cloning
         },
         :networkProfile  => {
           :networkInterfaces => [{:id => nic_id}],
+        },
+        :diagnosticsProfile => {
+          :bootDiagnostics => {
+            :enabled => enable_boot_diagnostics,
+            :storageUri => boot_diagnostics_uri
+          }
         }
       }
     }

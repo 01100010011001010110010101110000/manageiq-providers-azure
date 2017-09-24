@@ -1,4 +1,12 @@
 module ManageIQ::Providers::Azure::CloudManager::Provision::OptionsHelper
+  def boot_diagnostics_uri
+    get_option(:boot_diagnostics_uri)
+  end
+
+  def enable_boot_diagnostics
+    get_option(:enable_boot_diagnostics)
+  end
+
   def license_type
     get_option(:license_type)
   end
