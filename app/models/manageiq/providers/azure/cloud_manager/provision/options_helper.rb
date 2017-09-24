@@ -1,4 +1,8 @@
 module ManageIQ::Providers::Azure::CloudManager::Provision::OptionsHelper
+  def license_type
+    get_option(:license_type)
+  end
+
   def root_password
     MiqPassword.decrypt(options[:root_password]) if options[:root_password]
   end
