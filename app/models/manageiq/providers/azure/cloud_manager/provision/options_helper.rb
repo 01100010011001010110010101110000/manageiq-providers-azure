@@ -1,4 +1,8 @@
 module ManageIQ::Providers::Azure::CloudManager::Provision::OptionsHelper
+  def availability_set
+    get_option(:availability_set)
+  end
+
   def boot_diagnostics_uri
     get_option(:boot_diagnostics_uri)
   end

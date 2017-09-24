@@ -41,6 +41,9 @@ module ManageIQ::Providers::Azure::CloudManager::Provision::Cloning
       :location   => source.location,
       :properties => {
         :licenseType => license_type,
+        :availabilitySet => {
+          :id => availability_set
+        },
         :hardwareProfile => {
           :vmSize => instance_type.name
         },
